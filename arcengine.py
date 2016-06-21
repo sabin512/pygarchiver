@@ -2,6 +2,8 @@
 import tarfile
 
 class ArcEngine():
+    def __init__(self):
+        self.filename = None
 
     def load_file(self, filename):
         self.filename = filename
@@ -11,8 +13,8 @@ class ArcEngine():
         if not self.filename:
             return entries
 
-        tar = tarfile.open(self.filename,'r:xz')
-        
+        tar = tarfile.open(self.filename, 'r')
+
         for tarinfo in tar:
             entries.append(tarinfo)
         tar.close()
@@ -23,6 +25,6 @@ class ArcEngine():
             print('No file loaded ArcEngine will not extract anything')
             return
 
-        tar = tarfile.open(self.filename, 'r:xz')
+        tar = tarfile.open(self.filename, 'r')
         tar.extractall(path=destination)
         tar.close()
