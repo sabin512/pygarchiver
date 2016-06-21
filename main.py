@@ -36,16 +36,22 @@ class MainWindow(Gtk.Window):
         filechooser = Gtk.FileChooserNative.new('Select an archive',
                 self,
                 Gtk.FileChooserAction.OPEN)
+        filechooser.add_filter(self.build_lzma_filter())
         answer = filechooser.run()
         if answer == Gtk.ResponseType.CANCEL:
             return
         
         self.clear_entries()
         filename = filechooser.get_filename()
-        print('User selected: ' + filename) 
         self.engine.load_file(filename) 
         self.show_entries(self.engine.get_entries())
         self.extract_button.set_sensitive(True)
+
+    def build_lzma_filter(self):
+        lzmafilter = Gtk.FileFilter()
+        lzmafilter.set_name('Tar LZMA')
+        lzmafilter.add_mime_type('application/x-xz')
+        return lzmafilter
 
     def on_extract_clicked(self, button):
         filechooser = Gtk.FileChooserNative.new('Select a destination',
@@ -58,7 +64,6 @@ class MainWindow(Gtk.Window):
             return
 
         filename = filechooser.get_filename()
-        print('User chose to extract to ' + filename)
         self.engine.extract_to(filename)
         
     def show_entries(self, tar_entries):
