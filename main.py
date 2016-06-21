@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from optparse import OptionParser
 import tarfile
 import gi
 gi.require_version('Gtk','3.0')
@@ -6,7 +7,7 @@ from gi.repository import Gtk
 
 import arcengine
 
-class MainWindow(Gtk.Window):
+class PygWindow(Gtk.Window):
 
     def __init__(self):
         self.engine = arcengine.ArcEngine()
@@ -41,8 +42,11 @@ class MainWindow(Gtk.Window):
         if answer == Gtk.ResponseType.CANCEL:
             return
         
-        self.clear_entries()
         filename = filechooser.get_filename()
+        self.open_file(filename)
+
+    def open_file(self, filename):
+        self.clear_entries()
         self.engine.load_file(filename) 
         self.show_entries(self.engine.get_entries())
         self.extract_button.set_sensitive(True)
@@ -80,7 +84,20 @@ class MainWindow(Gtk.Window):
         for row in self.filelist.get_children():
             self.filelist.remove(row)
 
-win = MainWindow() 
-win.connect('delete-event', Gtk.main_quit)
-win.show_all()
-Gtk.main()
+def main():
+    usage = 'Usage: %prog [options]'
+    parser = OptionParser(usage)
+    parser.add_option('-f','--file',dest='filename',
+                      help='Open the given archive')
+    (options,args) = parser.parse_args()
+
+    pyg_window = PygWindow() 
+    pyg_window.connect('delete-event', Gtk.main_quit)
+    pyg_window.show_all()
+    if options.filename:
+        pyg_window.open_file(options.filename)
+    Gtk.main()
+
+
+if __name__ == '__main__':
+    main()
