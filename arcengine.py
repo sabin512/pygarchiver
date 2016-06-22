@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 import tarfile
 
+BZIP2 = 'bz2'
+GZIP = 'gz'
+LZMA = 'xz'
+
+DEFAULT_COMPRESSION = LZMA
+
 class ArcEngine():
     def __init__(self):
         self.filename = None
@@ -28,3 +34,10 @@ class ArcEngine():
         tar = tarfile.open(self.filename, 'r')
         tar.extractall(path=destination)
         tar.close()
+
+    def compress_files(self, file_list, compression=DEFAULT_COMPRESSION):
+        write_mode = 'w:' + compression
+        with tarfile.open(self.filename, write_mode) as tar:
+            for file_to_add in file_list:
+                tar.add(file_to_add)
+
