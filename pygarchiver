@@ -22,6 +22,7 @@ class PygWindow(Gtk.Window):
 
         self.archive_name_entry = build_archive_name_entry()
         self.extract_button = self.build_extract_button()
+        self.add_button = self.build_add_button()
         vbox.pack_start(self.build_toolbar(), False, False, 0)
 
         archive_name_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
@@ -36,16 +37,16 @@ class PygWindow(Gtk.Window):
     def build_toolbar(self):
         toolbar = Gtk.Toolbar(toolbar_style=Gtk.ToolbarStyle.BOTH_HORIZ)
         open_button = Gtk.ToolButton.new(label='Open...')
-        open_button.connect('clicked', self.on_open_clicked)
+        open_button.connect('clicked', self.on_select_archive_clicked, Gtk.FileChooserAction.OPEN)
         toolbar.insert(open_button, 0)
+        toolbar.insert(self.extract_button, 1)
 
         create_button = Gtk.ToolButton.new(label='Create...')
-        create_button.connect('clicked', self.on_create_clicked)
-        toolbar.insert(create_button, 1)
+        create_button.connect('clicked', self.on_select_archive_clicked, Gtk.FileChooserAction.SAVE)
+        toolbar.insert(create_button, 2)
+        toolbar.insert(self.add_button, 3)
 
-        toolbar.insert(self.extract_button, 2)
         return toolbar
-
 
     def build_extract_button(self):
         extract_button = Gtk.ToolButton.new(label='Extract To...')
@@ -53,48 +54,26 @@ class PygWindow(Gtk.Window):
         extract_button.connect('clicked', self.on_extract_clicked)
         return extract_button
 
-    def on_open_clicked(self, button):
+    def build_add_button(self):
+        add_button = Gtk.ToolButton.new(label='Add Files...')
+        add_button.set_sensitive(False)
+        add_button.connect('clicked', self.on_add_clicked)
+        return add_button
+
+    def on_select_archive_clicked(self, button, action):
         filechooser = Gtk.FileChooserNative.new('Select an archive',
                                                 self,
-                                                Gtk.FileChooserAction.OPEN)
+                                                action)
         filechooser.add_filter(build_archive_filter())
         answer = filechooser.run()
         if answer == Gtk.ResponseType.CANCEL:
             return
 
         filename = filechooser.get_filename()
-        self.open_file(filename)
-
-    def on_create_clicked(self, button):
-        filechooser = Gtk.FileChooserNative.new('Select files to add...',
-                                                self,
-                                                Gtk.FileChooserAction.OPEN)
-        filechooser.set_select_multiple(True)
-        answer = filechooser.run()
-        if answer == Gtk.ResponseType.CANCEL:
-            return
-
-        file_list = filechooser.get_filenames()
-        print('selected files: ' + str(file_list))
-
-    def open_file(self, filename):
-        self.clear_entries()
-        self.engine.load_file(filename)
-        self.show_entries(self.engine.get_entries())
-        self.extract_button.set_sensitive(True)
-        self.update_archive_name(filename)
-
-    def create_file(self, file_list):
-        self.engine.compress_files(file_list)
-
-    def update_archive_name(self, archive_path=''):
-        title = APP_NAME
-        if archive_path:
-            filename = os.path.basename(archive_path)
-            self.archive_name_entry.set_text(filename)
-            title += ' - ' + filename
-
-        self.set_title(title)
+        if action == Gtk.FileChooserAction.OPEN:
+            self.open_file(filename)
+        else:
+            self.create_file(filename)
 
     def on_extract_clicked(self, button):
         filechooser = Gtk.FileChooserNative.new('Select a destination',
@@ -109,13 +88,49 @@ class PygWindow(Gtk.Window):
         filename = filechooser.get_filename()
         self.engine.extract_to(filename)
 
-    def show_entries(self, tar_entries):
-        for tarinfo in tar_entries:
-            self.show_entry(tarinfo)
+    def on_add_clicked(self, button):
+        filechooser = Gtk.FileChooserNative.new('Select files to add...',
+                                                self,
+                                                Gtk.FileChooserAction.OPEN)
+        filechooser.set_select_multiple(True)
+        answer = filechooser.run()
+        if answer == Gtk.ResponseType.CANCEL:
+            return
+
+        file_list = filechooser.get_filenames()
+        for filename in file_list:
+            self.show_entry(filename)
         self.filelist.show_all()
 
-    def show_entry(self, tarinfo):
-        row = Gtk.Label(label=tarinfo.name)
+    def open_file(self, filename):
+        self.clear_entries()
+        self.engine.load_file(filename)
+        self.show_entries(self.engine.get_entries())
+        self.extract_button.set_sensitive(True)
+        self.update_archive_name(filename)
+
+    def create_file(self, filename):
+        self.clear_entries()
+        self.update_archive_name(filename)
+        self.extract_button.set_sensitive(False)
+        self.add_button.set_sensitive(True)
+
+    def update_archive_name(self, archive_path=''):
+        title = APP_NAME
+        if archive_path:
+            filename = os.path.basename(archive_path)
+            self.archive_name_entry.set_text(filename)
+            title += ' - ' + filename
+
+        self.set_title(title)
+
+    def show_entries(self, tar_entries):
+        for tarinfo in tar_entries:
+            self.show_entry(tarinfo.name)
+        self.filelist.show_all()
+
+    def show_entry(self, entry_text):
+        row = Gtk.Label(label=entry_text)
         row.set_halign(Gtk.Align.START)
         self.filelist.add(row)
 
