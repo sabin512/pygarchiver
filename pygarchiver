@@ -41,12 +41,18 @@ class PygWindow(Gtk.Window):
     def build_toolbar(self):
         toolbar = Gtk.Toolbar(toolbar_style=Gtk.ToolbarStyle.BOTH_HORIZ)
         open_button = Gtk.ToolButton.new(label='Open...')
-        open_button.connect('clicked', self.on_select_archive_clicked, Gtk.FileChooserAction.OPEN)
+        open_button.connect('clicked',
+                            self.on_select_archive_clicked,
+                            Gtk.FileChooserAction.OPEN,
+                            'Select an archive')
         toolbar.insert(open_button, 0)
         toolbar.insert(self.extract_button, 1)
 
         create_button = Gtk.ToolButton.new(label='Create...')
-        create_button.connect('clicked', self.on_select_archive_clicked, Gtk.FileChooserAction.SAVE)
+        create_button.connect('clicked',
+                              self.on_select_archive_clicked,
+                              Gtk.FileChooserAction.SAVE,
+                              'Choose a new archive name')
         toolbar.insert(create_button, 2)
         toolbar.insert(self.add_button, 3)
 
@@ -70,8 +76,8 @@ class PygWindow(Gtk.Window):
         compress_button.connect('clicked', self.on_compress_clicked)
         return compress_button
 
-    def on_select_archive_clicked(self, button, action):
-        filechooser = Gtk.FileChooserNative.new('Select an archive',
+    def on_select_archive_clicked(self, button, action, title):
+        filechooser = Gtk.FileChooserNative.new(title,
                                                 self,
                                                 action)
         filechooser.add_filter(build_archive_filter())
