@@ -20,8 +20,14 @@ class PygWindow(Gtk.Window):
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
         self.add(vbox)
 
-        self.extract_button = self.build_extract_button()
-        self.add_button = self.build_add_button()
+        self.extract_button = build_tool_button('Extract To...',
+                                                False,
+                                                self.on_extract_clicked)
+
+        self.add_button = build_tool_button('Add Files...',
+                                            False,
+                                            self.on_add_clicked)
+
         vbox.pack_start(self.build_toolbar(), False, False, 0)
 
         self.archive_name_entry = build_archive_name_entry()
@@ -40,35 +46,21 @@ class PygWindow(Gtk.Window):
 
     def build_toolbar(self):
         toolbar = Gtk.Toolbar(toolbar_style=Gtk.ToolbarStyle.BOTH_HORIZ)
-        open_button = Gtk.ToolButton.new(label='Open...')
-        open_button.connect('clicked',
-                            self.on_select_archive_clicked,
-                            Gtk.FileChooserAction.OPEN,
-                            'Select an archive')
+        open_button = build_chooser_tool_button('Open...',
+                                                self.on_select_archive_clicked,
+                                                Gtk.FileChooserAction.OPEN,
+                                                'Select an archive')
         toolbar.insert(open_button, 0)
         toolbar.insert(self.extract_button, 1)
 
-        create_button = Gtk.ToolButton.new(label='Create...')
-        create_button.connect('clicked',
-                              self.on_select_archive_clicked,
-                              Gtk.FileChooserAction.SAVE,
-                              'Choose a new archive name')
+        create_button = build_chooser_tool_button('Create...',
+                                                  self.on_select_archive_clicked,
+                                                  Gtk.FileChooserAction.SAVE,
+                                                  'Choose a new archive name')
         toolbar.insert(create_button, 2)
         toolbar.insert(self.add_button, 3)
 
         return toolbar
-
-    def build_extract_button(self):
-        extract_button = Gtk.ToolButton.new(label='Extract To...')
-        extract_button.set_sensitive(False)
-        extract_button.connect('clicked', self.on_extract_clicked)
-        return extract_button
-
-    def build_add_button(self):
-        add_button = Gtk.ToolButton.new(label='Add Files...')
-        add_button.set_sensitive(False)
-        add_button.connect('clicked', self.on_add_clicked)
-        return add_button
 
     def build_compress_button(self):
         compress_button = Gtk.Button.new_with_mnemonic('_Compress')
@@ -162,6 +154,17 @@ class PygWindow(Gtk.Window):
     def clear_entries(self):
         for row in self.filelist.get_children():
             self.filelist.remove(row)
+
+def build_tool_button(buttonlabel, is_sensitive, click_handler):
+    button = Gtk.ToolButton.new(label=buttonlabel)
+    button.set_sensitive(is_sensitive)
+    button.connect('clicked', click_handler)
+    return button
+
+def build_chooser_tool_button(buttonlabel, click_handler, action, chooser_title):
+    button = Gtk.ToolButton.new(label=buttonlabel)
+    button.connect('clicked', click_handler, action, chooser_title)
+    return button
 
 def build_archive_name_entry():
     entry = Gtk.Entry()
